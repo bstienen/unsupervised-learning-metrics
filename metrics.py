@@ -14,13 +14,15 @@ Implementation is inspired by
 
 import warnings
 import numpy as np
+from scipy.misc import comb
 from sklearn.metrics import auc
 
 
 def aumvc(scoring_function,
           X_test,
           N_mc=100000,
-          N_levelsets=100):
+          N_levelsets=100,
+          normalise=True):
     """ Calculate the area under the mass-volume curve for an anomaly detection
     function or algorithm
 
@@ -43,7 +45,10 @@ def aumvc(scoring_function,
         Number of datapoints to sample in the parameter space to estimate the
         level sets of the scoring function.
     N_levelsets: int (default: 100)
-        Number of level sets to evaluate """
+        Number of level sets to evaluate.
+    normalise: bool (default: True)
+        Indicates if output scores of the scoring_function should be normalised
+        before calculating the mass-volume curve. """
 
     # Get ranges for the test data
     mins = np.amin(X_test, axis=0)
@@ -58,6 +63,13 @@ def aumvc(scoring_function,
     # Score test and MC data
     score_U = scoring_function(U)
     score_test = scoring_function(X_test)
+
+    # Do normalising if needed
+    if normalise:
+        minimum = min(np.amin(score_U), np.amin(score_test))
+        maximum = max(np.amax(score_U), np.amax(score_test))
+        score_U = (score_U - minimum) / (maximum - minimum)
+        score_test = (score_test - minimum) / (maximum - minimum)
 
     # Calculate alphas to use
     alphas = np.linspace(0, 1, N_levelsets)
@@ -82,7 +94,8 @@ def aumvc_hd(scoring_function_generator,
              N_selected_dim=5,
              N_iterations=100,
              N_mc=100000,
-             N_levelsets=1000):
+             N_levelsets=1000,
+             normalise=True):
     """ Calculate the area under the mass-volume curve for an anomaly detection
     function or algorithm working in high-dimensional parameter spaces
 
@@ -121,7 +134,10 @@ def aumvc_hd(scoring_function_generator,
         Number of datapoints to sample in the parameter space to estimate the
         level sets of the scoring function.
     N_levelsets: int (default=100)
-        Number of level sets to evaluate. """
+        Number of level sets to evaluate.
+    normalise: bool (default: True)
+        Indicates if output scores of the scoring_function should be normalised
+        before calculating the mass-volume curve. """
 
 
     # Check if N_selected_dim <= dim(X_test)
@@ -139,7 +155,7 @@ def aumvc_hd(scoring_function_generator,
 
     # Check if the number of unique random subspaces is significantly larger
     # (i.e. > a factor of 2) than the requested number of iterations
-    N_unique = len(np.random.choice(data_dim, N_selected_dim, replace=False))
+    N_unique = comb(data_dim, N_selected_dim)
     if N_unique < 2*N_selected_dim:
         warnings.warn("The number of unique combinations of the dimensions of "
                       "the input space is smaller than the number of "
@@ -160,7 +176,11 @@ def aumvc_hd(scoring_function_generator,
         scoring_function = scoring_function_generator(X_train_selection)
 
         # Calculate area under curve and collect it in final variable
-        area, _, _ = aumvc(scoring_function, X_selection, N_mc, N_levelsets)
+        area, _, _ = aumvc(scoring_function,
+                           X_selection,
+                           N_mc,
+                           N_levelsets,
+                           normalise)
         area_hd += area
 
     # Return mean area
