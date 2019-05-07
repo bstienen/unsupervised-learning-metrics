@@ -61,8 +61,8 @@ def aumvc(scoring_function,
     vol_tot_cube = np.prod(maxs-mins)
 
     # Score test and MC data
-    score_U = score_function(U)
-    score_test = score_function(X_test)
+    score_U = scoring_function(U)
+    score_test = scoring_function(X_test)
 
     # Calculate alphas to use
     alphas = np.linspace(0, 1, N_levelsets)
