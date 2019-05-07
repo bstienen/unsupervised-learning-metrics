@@ -5,7 +5,7 @@ License:    MIT License
 Source:     http://www.github.com/bstienen/AUMVC
 
 Implementation of the Area under the Mass-Volume Curve algorithm as described by
-- Stephan Clémençon and Jeremie Jakubowicz, Scoring anomalies: a M-estimation
+- Stephan Clemencon and Jeremie Jakubowicz, Scoring anomalies: a M-estimation
   formulation approach. 2013-04
 
 Implementation is inspired by
@@ -50,7 +50,12 @@ def aumvc(scoring_function,
     maxs = np.amax(X_test, axis=0)
 
     # Generate uniform MC data
-    U = np.random.rand(N_mc, mins.shape[1])*(maxs-mins)+mins
+    print(maxs.shape)
+    print(mins.shape)
+    print(len(mins))
+    print(N_mc)
+    print(np.random.rand(N_mc, len(mins)).shape)
+    U = np.random.rand(N_mc, len(mins))*(maxs-mins)+mins
 
     # Calculate volume of total cube
     vol_tot_cube = np.prod(maxs-mins)
@@ -66,14 +71,14 @@ def aumvc(scoring_function,
     offsets = np.percentile(score_test, 100 * (1 - alphas))
 
     # Compute volumes of associated level sets
-    volume = (np.array([np.mean(score_U >= offset) for offset in offsets]) *
+    volumes = (np.array([np.mean(score_U >= offset) for offset in offsets]) *
               vol_tot_cube)
 
     # Calculating area under the curve
-    area = auc(alphas, volume)
+    area = auc(alphas, volumes)
 
     # Return area and curve variables
-    return (area, alphas, volume)
+    return (area, alphas, volumes)
 
 
 def aumvc_hd(scoring_function_generator,
