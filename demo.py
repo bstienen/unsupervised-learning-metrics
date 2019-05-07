@@ -1,13 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.datasets import make_classification, load_iris
+from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import IsolationForest
 from sklearn.svm import OneClassSVM
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.covariance import EllipticEnvelope
-from sklearn.utils import check_random_state
 
 import metrics
 
