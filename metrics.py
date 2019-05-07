@@ -39,7 +39,7 @@ def aumvc(scoring_function,
         anomaly).
     X_test: numpy.ndarray of shape (nPoints, nFeatures)
         Datapoints used for testing the algorithm.
-    N_MC: int (default: 100,000)
+    N_mc: int (default: 100,000)
         Number of datapoints to sample in the parameter space to estimate the
         level sets of the scoring function.
     N_levelsets: int (default: 100)
@@ -50,11 +50,6 @@ def aumvc(scoring_function,
     maxs = np.amax(X_test, axis=0)
 
     # Generate uniform MC data
-    print(maxs.shape)
-    print(mins.shape)
-    print(len(mins))
-    print(N_mc)
-    print(np.random.rand(N_mc, len(mins)).shape)
     U = np.random.rand(N_mc, len(mins))*(maxs-mins)+mins
 
     # Calculate volume of total cube
@@ -87,7 +82,7 @@ def aumvc_hd(scoring_function_generator,
              N_selected_dim=5,
              N_iterations=100,
              N_mc=100000,
-             N_masses=1000):
+             N_levelsets=1000):
     """ Calculate the area under the mass-volume curve for an anomaly detection
     function or algorithm working in high-dimensional parameter spaces
 
@@ -122,7 +117,7 @@ def aumvc_hd(scoring_function_generator,
         raised if this number is higher than the total number of unique
         combinations that can be randomly selected from the provided parameter
         space.
-    N_MC: int (default=100,000)
+    N_mc: int (default=100,000)
         Number of datapoints to sample in the parameter space to estimate the
         level sets of the scoring function.
     N_levelsets: int (default=100)
@@ -131,7 +126,7 @@ def aumvc_hd(scoring_function_generator,
 
     # Check if N_selected_dim <= dim(X_test)
     data_dim = X_test.shape[1]
-    if data_dim > N_selected_dim:
+    if data_dim < N_selected_dim:
         raise Exception("The number of dimensions to select in each iteration "
                         "is larger than the number of dimensions in the "
                         "provided data.")
@@ -144,7 +139,7 @@ def aumvc_hd(scoring_function_generator,
 
     # Check if the number of unique random subspaces is significantly larger
     # (i.e. > a factor of 2) than the requested number of iterations
-    N_unique = np.random.choice(data_dim, N_selected_dim, replace=False)
+    N_unique = len(np.random.choice(data_dim, N_selected_dim, replace=False))
     if N_unique < 2*N_selected_dim:
         warnings.warn("The number of unique combinations of the dimensions of "
                       "the input space is smaller than the number of "
@@ -165,7 +160,7 @@ def aumvc_hd(scoring_function_generator,
         scoring_function = scoring_function_generator(X_train_selection)
 
         # Calculate area under curve and collect it in final variable
-        area, _, _ = aumvc(scoring_function, X_test, N_mc, N_masses)
+        area, _, _ = aumvc(scoring_function, X_selection, N_mc, N_levelsets)
         area_hd += area
 
     # Return mean area
