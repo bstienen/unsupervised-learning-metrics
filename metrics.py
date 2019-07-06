@@ -4,7 +4,7 @@ Author:     Bob Stienen
 License:    MIT License
 Source:     http://www.github.com/bstienen/AUMVC
 
-Implementation of the Area under the Mass-Volume Curve algorithm as described by
+Implementation of the Area under the Mass-Volume Curve algorithm as by
 - Stephan Clémençon and Jeremie Jakubowicz, Scoring anomalies: a M-estimation
   formulation approach. 2013-04
 
@@ -17,10 +17,7 @@ import numpy as np
 from sklearn.metrics import auc
 
 
-def aumvc(scoring_function,
-          X_test,
-          N_mc=100000,
-          N_levelsets=100):
+def aumvc(scoring_function, X_test, N_mc=100000, N_levelsets=100):
     """ Calculate the area under the mass-volume curve for an anomaly detection
     function or algorithm
 
@@ -34,9 +31,9 @@ def aumvc(scoring_function,
     ----------
     scoring_function: function
         Function that takes datapoints as numpy.ndarray (nPoints, nFeatures)
-        and returns an anomaly score. This score should be in range [0,1], where
-        1 indicates the point not being an anomaly (and 0 that the point *is* an
-        anomaly).
+        and returns an anomaly score. This score should be in range [0,1],
+        where 1 indicates the point not being an anomaly (and 0 that the point
+        *is* an anomaly).
     X_test: numpy.ndarray of shape (nPoints, nFeatures)
         Datapoints used for testing the algorithm.
     N_MC: int (default: 100,000)
@@ -50,14 +47,14 @@ def aumvc(scoring_function,
     maxs = np.amax(X_test, axis=0)
 
     # Generate uniform MC data
-    U = np.random.rand(N_mc, mins.shape[1])*(maxs-mins)+mins
+    U = np.random.rand(N_mc, mins.shape[1]) * (maxs - mins) + mins
 
     # Calculate volume of total cube
-    vol_tot_cube = np.prod(maxs-mins)
+    vol_tot_cube = np.prod(maxs - mins)
 
     # Score test and MC data
-    score_U = score_function(U)
-    score_test = score_function(X_test)
+    score_U = scoring_function(U)
+    score_test = scoring_function(X_test)
 
     # Calculate alphas to use
     alphas = np.linspace(0, 1, N_levelsets)
@@ -66,8 +63,8 @@ def aumvc(scoring_function,
     offsets = np.percentile(score_test, 100 * (1 - alphas))
 
     # Compute volumes of associated level sets
-    volume = (np.array([np.mean(score_U >= offset) for offset in offsets]) *
-              vol_tot_cube)
+    volume = (np.array([np.mean(score_U >= offset)
+                        for offset in offsets]) * vol_tot_cube)
 
     # Calculating area under the curve
     area = auc(alphas, volume)
@@ -90,10 +87,10 @@ def aumvc_hd(scoring_function_generator,
     AUMVC values for randomly selected subspaces of the parameter space under
     consideration. The AUMVCs are calculated using the `aumvc` function above.
     As this requires a retraining of the scoring function for each random
-    subspace, the `aumvc_hd` function does not take a scoring function as input,
-    but rather a generator of scoring functions. This function should take
-    the training data as input and return a scoring function (see description
-    of `aumvc` for requirements of this function).
+    subspace, the `aumvc_hd` function does not take a scoring function as
+    input, but rather a generator of scoring functions. This function should
+    take the training data as input and return a scoring function (see
+    description of `aumvc` for requirements of this function).
 
     Parameters
     ----------
@@ -123,33 +120,32 @@ def aumvc_hd(scoring_function_generator,
     N_levelsets: int (default=100)
         Number of level sets to evaluate. """
 
-
     # Check if N_selected_dim <= dim(X_test)
     data_dim = X_test.shape[1]
     if data_dim > N_selected_dim:
-        raise Exception("The number of dimensions to select in each iteration "
-                        "is larger than the number of dimensions in the "
-                        "provided data.")
+        raise Exception("""The number of dimensions to select in each iteration
+                        is larger than the number of dimensions in the provided
+                        data.""")
 
     # Check if the dimensionality of training data matches the dimensionality
     # of the testing data
     if X_train.shape[1] != data_dim:
-        raise Exception("The number of features in the training data does not "
-                        "match the number of features in the testing data.")
+        raise Exception("""The number of features in the training data does not
+                        match the number of features in the testing data.""")
 
     # Check if the number of unique random subspaces is significantly larger
     # (i.e. > a factor of 2) than the requested number of iterations
     N_unique = np.random.choice(data_dim, N_selected_dim, replace=False)
-    if N_unique < 2*N_selected_dim:
-        warnings.warn("The number of unique combinations of the dimensions of "
-                      "the input space is smaller than the number of "
-                      "dimensions to select in each iterations.")
+    if N_unique < 2 * N_selected_dim:
+        warnings.warn("""The number of unique combinations of the dimensions of
+                      the input space is smaller than the number of dimensions
+                      to select in each iterations.""")
 
     # Initialise final AUMVC variable
     area_hd = 0
 
     # Run over each iteration
-    for iteration in range(N_iterations):
+    for _ in range(N_iterations):
 
         # Make feature subselection
         features = np.random.choice(data_dim, N_selected_dim, replace=False)
@@ -160,7 +156,7 @@ def aumvc_hd(scoring_function_generator,
         scoring_function = scoring_function_generator(X_train_selection)
 
         # Calculate area under curve and collect it in final variable
-        area, _, _ = aumvc(scoring_function, X_test, N_mc, N_masses)
+        area, _, _ = aumvc(scoring_function, X_selection, N_mc, N_masses)
         area_hd += area
 
     # Return mean area
