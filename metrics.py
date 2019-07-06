@@ -143,22 +143,21 @@ def aumvc_hd(scoring_function_generator,
     data_dim = X_test.shape[1]
     if data_dim > N_selected_dim:
         raise Exception("""The number of dimensions to select in each iteration
-                        is larger than the number of dimensions in the provided
-                        data.""")
+is larger than the number of dimensions in the provided data.""")
 
     # Check if the dimensionality of training data matches the dimensionality
     # of the testing data
     if X_train.shape[1] != data_dim:
         raise Exception("""The number of features in the training data does not
-                        match the number of features in the testing data.""")
+match the number of features in the testing data.""")
 
     # Check if the number of unique random subspaces is significantly larger
     # (i.e. > a factor of 2) than the requested number of iterations
     N_unique = np.random.choice(data_dim, N_selected_dim, replace=False)
     if N_unique < 2 * N_selected_dim:
         warnings.warn("""The number of unique combinations of the dimensions of
-                      the input space is smaller than the number of dimensions
-                      to select in each iterations.""")
+the input space is smaller than the number of dimensions to select in each
+iterations.""")
 
     # Initialise final AUMVC variable
     area_hd = 0
